@@ -65,12 +65,7 @@ Then visit:
   `/documents`, `/document_fields`, `/document_line_items` — plain CRUD
   screens (`mix phx.gen.live` scaffolding) for poking at the underlying data
   directly; not linked from the main nav
-* [`localhost:4000/dev/dashboard`](http://localhost:4000/dev/dashboard) —
-  Phoenix LiveDashboard (dev only)
 
-If the server fails to start with `:eaddrinuse`, port 4000 is already held
-by another process (commonly a previous `phx.server` run that didn't shut
-down cleanly) — find and stop it with `lsof -nP -iTCP:4000 -sTCP:LISTEN`.
 
 ## Running tests
 
@@ -83,15 +78,6 @@ running (`config/test.exs` uses the `document_pipeline_test` database,
 partitioned per `MIX_TEST_PARTITION` for parallel test runs). Oban runs with
 `testing: :manual` in test, so jobs enqueue but don't execute automatically —
 tests drive `ProcessDocumentWorker` explicitly via `Oban.Testing`.
-
-## Before committing
-
-```bash
-mix precommit
-```
-
-Runs `compile --warnings-as-errors`, `deps.unlock --unused`, `format`, and
-`test` — fix any issues this surfaces before opening a PR.
 
 ## Architecture overview
 
@@ -182,22 +168,3 @@ erDiagram
    `correct_document_type/2` deletes all of its fields/line items and
    re-triggers extraction against the corrected type, stamping
    `domain_type_source: "user"`.
-
-## Known gaps
-
-* **FK deletes aren't cascading.** `documents.project_id`,
-  `document_fields.document_id`, and `document_line_items.document_id` are
-  all declared with `on_delete: :nothing`. `delete_project/1` and
-  `delete_document/1` call `Repo.delete/1` directly with no cleanup, so
-  deleting a project/document that still has children raises a raw
-  Postgres foreign-key violation instead of cascading or erroring cleanly.
-* **`get_documents_needing_review/1` is still unused and untested.** It
-  used to always return `[]` (`d.status == [...]` compared a string to a
-  list instead of using `in`) — fixed, but nothing calls it yet.
-* **`"requires_review"`** is rendered as a status badge in
-  `WorkspaceLive.status_badge/1` and referenced in `Documents` docstrings,
-  but no code path actually sets it on a document yet — it's aspirational.
-* The type-correction flow (`correct_type` event /
-  `Documents.correct_document_type/2`) has no regression test yet, despite
-  being the most state-heavy interaction in the app (wipe + reprocess +
-  live update).
