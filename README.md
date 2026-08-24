@@ -8,6 +8,7 @@ pipeline (Claude by default), processed asynchronously with Oban, and
 reviewed/corrected live in the UI over `Phoenix.PubSub` — no separate API
 layer, everything is server-rendered LiveView.
 
+
 ## Prerequisites
 
 * Elixir `~> 1.15` and a compatible Erlang/OTP
@@ -72,12 +73,6 @@ Then visit:
 ```bash
 mix test
 ```
-
-The `test` alias creates/migrates the test database automatically before
-running (`config/test.exs` uses the `document_pipeline_test` database,
-partitioned per `MIX_TEST_PARTITION` for parallel test runs). Oban runs with
-`testing: :manual` in test, so jobs enqueue but don't execute automatically —
-tests drive `ProcessDocumentWorker` explicitly via `Oban.Testing`.
 
 ## Architecture overview
 
