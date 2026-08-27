@@ -6,19 +6,17 @@ defmodule DocumentPipelineWeb.DocumentLineItemLiveTest do
 
   @create_attrs %{
     description: "some description",
-    source: "some source",
     category: "some category",
     amount: "120.5",
     line_number: 42
   }
   @update_attrs %{
     description: "some updated description",
-    source: "some updated source",
     category: "some updated category",
     amount: "456.7",
     line_number: 43
   }
-  @invalid_attrs %{description: nil, source: nil, category: nil, amount: nil, line_number: nil}
+  @invalid_attrs %{description: nil, category: nil, amount: nil, line_number: nil}
   defp create_document_line_item(_) do
     document_line_item = document_line_item_fixture()
 

@@ -24,7 +24,13 @@ defmodule DocumentPipelineWeb.DocumentFieldLive.Form do
         <.input field={@form[:field_name]} type="text" label="Field name" />
         <.input field={@form[:field_value]} type="text" label="Field value" />
         <.input field={@form[:confidence]} type="number" label="Confidence" step="any" />
-        <.input field={@form[:source]} type="text" label="Source" />
+        <.input
+          field={@form[:source]}
+          type="select"
+          label="Source"
+          options={[{"System", "system"}, {"User", "user"}]}
+          disabled
+        />
         <footer>
           <.button phx-disable-with="Saving..." variant="primary">Save Document field</.button>
           <.button navigate={return_path(@return_to, @document_field)}>Cancel</.button>
@@ -52,7 +58,10 @@ defmodule DocumentPipelineWeb.DocumentFieldLive.Form do
     socket
     |> assign(:page_title, "Edit Document field")
     |> assign(:document_field, document_field)
-    |> assign(:form, to_form(Documents.change_document_field(document_field)))
+    |> assign(
+      :form,
+      to_form(Documents.change_document_field(document_field, %{"source" => "user"}))
+    )
   end
 
   defp apply_action(socket, :new, _params) do
@@ -61,20 +70,38 @@ defmodule DocumentPipelineWeb.DocumentFieldLive.Form do
     socket
     |> assign(:page_title, "New Document field")
     |> assign(:document_field, document_field)
-    |> assign(:form, to_form(Documents.change_document_field(document_field)))
+    |> assign(
+      :form,
+      to_form(Documents.change_document_field(document_field, %{"source" => "user"}))
+    )
   end
 
   @impl true
   def handle_event("validate", %{"document_field" => document_field_params}, socket) do
     changeset =
-      Documents.change_document_field(socket.assigns.document_field, document_field_params)
+      Documents.change_document_field(
+        socket.assigns.document_field,
+        force_user_source(document_field_params)
+      )
 
     {:noreply, assign(socket, form: to_form(changeset, action: :validate))}
   end
 
   def handle_event("save", %{"document_field" => document_field_params}, socket) do
-    save_document_field(socket, socket.assigns.live_action, document_field_params)
+    save_document_field(
+      socket,
+      socket.assigns.live_action,
+      force_user_source(document_field_params)
+    )
   end
+
+  # This form is only reachable by a human operator in the UI — the
+  # extraction pipeline writes "system"-sourced records directly via
+  # Documents.persist_field_extractions/2, never through this LiveView.
+  # So any save made here is a user correction, matching
+  # Documents.update_field/2. Enforced server-side since a client-disabled
+  # <select> is only cosmetic and can't be trusted on its own.
+  defp force_user_source(params), do: Map.put(params, "source", "user")
 
   defp save_document_field(socket, :edit, document_field_params) do
     case Documents.update_document_field(socket.assigns.document_field, document_field_params) do

@@ -19,5 +19,6 @@ defmodule DocumentPipeline.Documents.DocumentLineItem do
     document_line_item
     |> cast(attrs, [:description, :amount, :category, :line_number, :source, :document_id])
     |> validate_required([:description, :amount, :category, :line_number, :source, :document_id])
+    |> validate_inclusion(:source, ~w(system user))
   end
 end

@@ -18,5 +18,6 @@ defmodule DocumentPipeline.Documents.DocumentField do
     document_field
     |> cast(attrs, [:field_name, :field_value, :confidence, :source, :document_id])
     |> validate_required([:field_name, :field_value, :confidence, :source, :document_id])
+    |> validate_inclusion(:source, ~w(system user))
   end
 end

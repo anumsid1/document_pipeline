@@ -6,17 +6,15 @@ defmodule DocumentPipelineWeb.DocumentFieldLiveTest do
 
   @create_attrs %{
     field_value: "some field_value",
-    source: "some source",
     field_name: "some field_name",
     confidence: 120.5
   }
   @update_attrs %{
     field_value: "some updated field_value",
-    source: "some updated source",
     field_name: "some updated field_name",
     confidence: 456.7
   }
-  @invalid_attrs %{field_value: nil, source: nil, field_name: nil, confidence: nil}
+  @invalid_attrs %{field_value: nil, field_name: nil, confidence: nil}
   defp create_document_field(_) do
     document_field = document_field_fixture()
 

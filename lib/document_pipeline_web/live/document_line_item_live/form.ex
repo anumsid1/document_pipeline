@@ -25,7 +25,13 @@ defmodule DocumentPipelineWeb.DocumentLineItemLive.Form do
         <.input field={@form[:amount]} type="number" label="Amount" step="any" />
         <.input field={@form[:category]} type="text" label="Category" />
         <.input field={@form[:line_number]} type="number" label="Line number" />
-        <.input field={@form[:source]} type="text" label="Source" />
+        <.input
+          field={@form[:source]}
+          type="select"
+          label="Source"
+          options={[{"System", "system"}, {"User", "user"}]}
+          disabled
+        />
         <footer>
           <.button phx-disable-with="Saving..." variant="primary">Save Document line item</.button>
           <.button navigate={return_path(@return_to, @document_line_item)}>Cancel</.button>
@@ -53,7 +59,10 @@ defmodule DocumentPipelineWeb.DocumentLineItemLive.Form do
     socket
     |> assign(:page_title, "Edit Document line item")
     |> assign(:document_line_item, document_line_item)
-    |> assign(:form, to_form(Documents.change_document_line_item(document_line_item)))
+    |> assign(
+      :form,
+      to_form(Documents.change_document_line_item(document_line_item, %{"source" => "user"}))
+    )
   end
 
   defp apply_action(socket, :new, _params) do
@@ -62,7 +71,10 @@ defmodule DocumentPipelineWeb.DocumentLineItemLive.Form do
     socket
     |> assign(:page_title, "New Document line item")
     |> assign(:document_line_item, document_line_item)
-    |> assign(:form, to_form(Documents.change_document_line_item(document_line_item)))
+    |> assign(
+      :form,
+      to_form(Documents.change_document_line_item(document_line_item, %{"source" => "user"}))
+    )
   end
 
   @impl true
@@ -70,15 +82,26 @@ defmodule DocumentPipelineWeb.DocumentLineItemLive.Form do
     changeset =
       Documents.change_document_line_item(
         socket.assigns.document_line_item,
-        document_line_item_params
+        force_user_source(document_line_item_params)
       )
 
     {:noreply, assign(socket, form: to_form(changeset, action: :validate))}
   end
 
   def handle_event("save", %{"document_line_item" => document_line_item_params}, socket) do
-    save_document_line_item(socket, socket.assigns.live_action, document_line_item_params)
+    save_document_line_item(
+      socket,
+      socket.assigns.live_action,
+      force_user_source(document_line_item_params)
+    )
   end
+
+  # This form is only reachable by a human operator in the UI — the
+  # extraction pipeline writes "system"-sourced records directly via
+  # Documents.persist_line_item_extractions/2, never through this LiveView.
+  # So any save made here is a user correction. Enforced server-side since a
+  # client-disabled <select> is only cosmetic and can't be trusted on its own.
+  defp force_user_source(params), do: Map.put(params, "source", "user")
 
   defp save_document_line_item(socket, :edit, document_line_item_params) do
     case Documents.update_document_line_item(

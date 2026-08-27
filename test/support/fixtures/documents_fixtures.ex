@@ -47,7 +47,7 @@ defmodule DocumentPipeline.DocumentsFixtures do
         confidence: 120.5,
         field_name: "some field_name",
         field_value: "some field_value",
-        source: "some source"
+        source: "system"
       })
       |> DocumentPipeline.Documents.create_document_field()
 
@@ -69,7 +69,7 @@ defmodule DocumentPipeline.DocumentsFixtures do
         category: "some category",
         description: "some description",
         line_number: 42,
-        source: "some source"
+        source: "system"
       })
       |> DocumentPipeline.Documents.create_document_line_item()
 
